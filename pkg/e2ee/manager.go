@@ -208,7 +208,7 @@ func (m *Manager) EncryptMessageV2(chatID, from string, myKeyID int, peerPubKeyB
 
 // EncryptMessageV2Raw encrypts a raw JSON payload (bytes) instead of forcing a text object.
 // This is required for media messages.
-// Falls back to V1 encryption if V2 fails (V2 is broken in WASM due to SKB issues).
+// Falls back to V1 encryption if V2 fails (some clients like iOS still use V1).
 func (m *Manager) EncryptMessageV2Raw(chatID, from string, myKeyID int, peerPubKeyB64 string, senderKeyID, receiverKeyID, contentType int, payloadJSON []byte) ([]string, error) {
 	chanID, seq, err := m.ensureChannelForEncrypt(chatID, myKeyID, senderKeyID, receiverKeyID, peerPubKeyB64)
 	if err != nil {
@@ -217,8 +217,7 @@ func (m *Manager) EncryptMessageV2Raw(chatID, from string, myKeyID int, peerPubK
 
 	ctB64, err := m.runner.ChannelEncryptV2(chanID, chatID, from, senderKeyID, receiverKeyID, contentType, seq, string(payloadJSON))
 	if err != nil {
-		// V2 is broken in WASM when no Go channel is available.
-		// Fall back to V1 encryption.
+		// Fall back to V1 encryption (some clients like iOS still use V1).
 		return m.encryptV1Chunks(chanID, senderKeyID, receiverKeyID, payloadJSON)
 	}
 	ctBytes, err := base64.StdEncoding.DecodeString(ctB64)
@@ -382,7 +381,7 @@ func (m *Manager) DecryptMessageV2(msg *line.Message) (string, error) {
 
 	pt, _, err := m.runner.ChannelDecryptV2(chanID, msg.To, msg.From, senderKeyID, receiverKeyID, msg.ContentType, base64.StdEncoding.EncodeToString(cipher))
 	if err != nil {
-		// V2 decrypt failed (broken in WASM due to SKB), try V1 as fallback
+		// V2 decrypt failed, try V1 as fallback (some clients like iOS still use V1)
 		cipherV1, err2 := assembleCipherV1(msg.Chunks)
 		if err2 != nil {
 			return "", err // return original V2 error
@@ -500,7 +499,7 @@ func (m *Manager) DecryptGroupMessage(msg *line.Message, chatMid string) (string
 
 	pt, _, err := m.runner.ChannelDecryptV2(chanID, msg.To, msg.From, senderKeyID, groupKeyID, msg.ContentType, base64.StdEncoding.EncodeToString(cipher))
 	if err != nil {
-		// V2 decrypt failed (broken in WASM due to SKB), try V1 as fallback
+		// V2 decrypt failed, try V1 as fallback (some clients like iOS still use V1)
 		cipherV1, err2 := assembleCipherV1(msg.Chunks)
 		if err2 != nil {
 			return "", groupKeyID, err // return original V2 error
@@ -552,7 +551,7 @@ func (m *Manager) EncryptGroupMessage(chatMid, fromMid string, plaintext string)
 }
 
 // group messages are encrypted differently compared to 1:1 messages.
-// Falls back to V1 if V2 fails (V2 is broken in WASM due to SKB issues).
+// Falls back to V1 if V2 fails (some clients like iOS still use V1).
 func (m *Manager) EncryptGroupMessageRaw(chatMid, fromMid string, contentType int, payload []byte) ([]string, error) {
 	m.mu.Lock()
 	groupKeyID, ok := m.latestGroupKey[chatMid]
@@ -576,7 +575,7 @@ func (m *Manager) EncryptGroupMessageRaw(chatMid, fromMid string, contentType in
 
 	ctB64, err := m.runner.ChannelEncryptV2(chanID, chatMid, fromMid, myKeyID, groupKeyID, contentType, seq, string(payload))
 	if err != nil {
-		// V2 failed, fall back to V1
+		// V2 failed, fall back to V1 (some clients like iOS still use V1)
 		return m.encryptV1Chunks(chanID, myKeyID, groupKeyID, payload)
 	}
 	ctBytes, err := base64.StdEncoding.DecodeString(ctB64)
