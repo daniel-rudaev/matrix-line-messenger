@@ -258,6 +258,14 @@ func parseE2EEPublicKey(rawData []byte) (*E2EEPublicKey, error) {
 		return false
 	}
 
+	// Check specVersion early: a negative value means E2EE is not available
+	if sv, ok := data["specVersion"]; ok {
+		specVersion := findInt64(sv)
+		if specVersion < 0 {
+			return nil, fmt.Errorf("E2EE not available: specVersion=%d (raw=%s)", specVersion, string(rawData))
+		}
+	}
+
 	pub := ""
 	keyID := int64(0)
 	if pk, ok := data["publicKey"].(map[string]any); ok {
@@ -280,6 +288,13 @@ func parseE2EEPublicKey(rawData []byte) (*E2EEPublicKey, error) {
 	}
 	if pub == "" || keyID == 0 {
 		return nil, fmt.Errorf("missing fields (pub=%t keyID=%d raw=%s)", pub != "", keyID, string(rawData))
+	}
+
+	if len(pub) < 20 {
+		return nil, fmt.Errorf("E2EE public key too short (%d chars), likely not a real key (raw=%s)", len(pub), string(rawData))
+	}
+	if keyID <= 0 {
+		return nil, fmt.Errorf("E2EE keyID invalid (%d), peer may not support Letter Sealing (raw=%s)", keyID, string(rawData))
 	}
 
 	return &E2EEPublicKey{

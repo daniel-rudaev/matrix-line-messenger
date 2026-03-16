@@ -83,6 +83,10 @@ func (lc *LineClient) ensurePeerKey(_ context.Context, mid string) (int, string,
 	if err != nil {
 		return 0, "", err
 	}
+	// Peer doesn't support Letter Sealing if E2EEVersion is 0 or negative
+	if res.E2EEVersion <= 0 {
+		return 0, "", fmt.Errorf("peer %s does not support Letter Sealing (e2eeVersion=%d)", mid, res.E2EEVersion)
+	}
 	keyID, err := res.KeyID.Int64()
 	if err != nil {
 		return 0, "", err

@@ -170,6 +170,14 @@ func (c *Client) WaitForLogin(verifier string) (*LoginResult, error) {
 		}, nil
 	}
 
+	// Non-E2EE fallback: the Chrome extension always calls LoginV2WithVerifier
+	// after polling succeeds, even when no E2EE data is present.
+	if res, err := c.LoginV2WithVerifier(verifier); err != nil {
+		log.Printf("[LINE] LoginV2WithVerifier (non-E2EE fallback) failed: %v", err)
+	} else {
+		return res, nil
+	}
+
 	return nil, fmt.Errorf("polling returned without success")
 }
 
