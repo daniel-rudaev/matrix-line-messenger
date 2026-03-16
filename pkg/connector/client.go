@@ -50,6 +50,10 @@ func (lc *LineClient) refreshAndSave(ctx context.Context) error {
 		return fmt.Errorf("failed to refresh token: %w", err)
 	}
 
+	if res.AccessToken == "" {
+		return fmt.Errorf("refresh returned empty access token")
+	}
+
 	lc.AccessToken = res.AccessToken
 	if res.RefreshToken != "" {
 		lc.RefreshToken = res.RefreshToken
