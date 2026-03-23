@@ -317,7 +317,7 @@ you are messaging have `Letter Sealing` enabled.
 
 1. Open the LINE app on your mobile device.
 2. Go to `Settings` > `Privacy`.
-3. Turn `Letter Sealing` on.
+3. Turn `Letter Sealing` on (note: it can't be turned off once you do so) 
 4. Try logging in to the bridge again.
 
 For current limitations, edge cases, and the full support checklist, see
