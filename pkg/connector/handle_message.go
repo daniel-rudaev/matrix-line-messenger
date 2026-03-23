@@ -57,6 +57,13 @@ func (lc *LineClient) queueIncomingMessage(msg *line.Message, opType int) {
 			// Ensure peer keys are available before attempting decryption
 			lc.ensurePeerKeyForMessage(context.Background(), msg)
 
+			// If we receive an encrypted group message, clear its noE2EE cache
+			// so future sends will attempt E2EE again.
+			if (ToType(msg.ToType) == ToRoom || ToType(msg.ToType) == ToGroup) && lc.isGroupNoE2EE(portalIDStr) {
+				lc.UserLogin.Bridge.Log.Info().Str("chat_mid", portalIDStr).Msg("Received encrypted group message, clearing noE2EE cache")
+				lc.clearGroupNoE2EE(portalIDStr)
+			}
+
 			if ToType(msg.ToType) == ToRoom || ToType(msg.ToType) == ToGroup {
 				// Group Decryption
 				if len(msg.Chunks) >= 5 {
