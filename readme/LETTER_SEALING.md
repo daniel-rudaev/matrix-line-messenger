@@ -72,22 +72,63 @@ The bridge determines E2EE capability per-chat before sending:
 
 ## Test matrix
 
+### Login
+
 | Test case | Status |
 | --- | --- |
 | `LSOFF` bridge account login | Verified |
 | `LSON` bridge account login | Verified |
-| `LSON` -> `LSOFF` direct text send | Verified |
-| `LSON` -> `LSON` direct text send | Verified |
-| `LSOFF` -> `LSON` direct text send | Verified |
-| `LSOFF` -> mixed group send | Verified |
-| `LSOFF` -> bot/business account send | Verified |
-| `LSON` -> mixed group send | Verified |
-| `LSON` -> `LSON` group send | Verified |
-| Incoming messages from `LSOFF` users | Verified |
-| Incoming messages from `LSON` users | Verified |
-| Image send to `LSON` (E2EE) | Verified |
-| Image send to `LSOFF` / plain chats | Verified |
-| Transparent PNG handling | Verified (composited onto white background) |
+
+### Text messages
+
+| Test case | Path | Status |
+| --- | --- | --- |
+| `LSON` bridge -> `LSON` peer (DM) | E2EE | Verified |
+| `LSON` bridge -> `LSOFF` peer (DM) | Plain | Verified |
+| `LSON` bridge -> `LSON`-only group | E2EE | Verified |
+| `LSON` bridge -> mixed group | Plain | Verified |
+| `LSON` bridge -> bot/business account | Plain | Verified |
+| `LSOFF` bridge -> `LSON` peer (DM) | Plain | Verified |
+| `LSOFF` bridge -> `LSOFF` peer (DM) | Plain | Not tested |
+| `LSOFF` bridge -> mixed group (LSOFF created) | Plain | Verified |
+| `LSOFF` bridge -> mixed group (LSON created) | Plain | Verified |
+| `LSOFF` bridge -> bot/business account | Plain | Verified |
+
+### Receiving messages
+
+| Test case | Status |
+| --- | --- |
+| Incoming E2EE text from `LSON` peer | Verified |
+| Incoming plain text from `LSOFF` peer | Verified |
+| Incoming E2EE group message (`LSON`-only) | Verified |
+| Incoming group message (mixed group) | Verified |
+
+### Media (images)
+
+| Test case | Path | Status |
+| --- | --- | --- |
+| Image to `LSON` peer | E2EE (`emi` upload) | Verified |
+| Image to `LSOFF` peer | Plain (`m` upload) | Verified |
+| Image to mixed group | Plain (`m` upload) | Verified |
+| Image to bot/business account | Plain (`m` upload) | Verified |
+| Transparent PNG | White background compositing | Verified |
+
+### Media (audio, video, files)
+
+| Test case | Path | Status |
+| --- | --- | --- |
+| Video to `LSON` peer | E2EE (`emv` upload) | Not tested |
+| Video to `LSOFF` / plain chats | Plain (`m` upload) | Not tested |
+| File to `LSON` peer | E2EE (`emf` upload) | Not tested |
+| File to `LSOFF` / plain chats | Plain (`m` upload) | Not tested |
+| Audio send (any) | Not implemented | Known gap |
+
+### Re-login and token refresh
+
+| Test case | Status |
+| --- | --- |
+| `LSON` re-login after token expiry | Not tested |
+| `LSOFF` re-login after token expiry | Not tested |
 
 ## References
 
