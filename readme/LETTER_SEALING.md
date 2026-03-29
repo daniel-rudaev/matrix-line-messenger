@@ -117,11 +117,22 @@ The bridge determines E2EE capability per-chat before sending:
 
 | Test case | Path | Status |
 | --- | --- | --- |
-| Video to `LSON` peer | E2EE (`emv` upload) | Not tested |
-| Video to `LSOFF` / plain chats | Plain (`m` upload) | Not tested |
-| File to `LSON` peer | E2EE (`emf` upload) | Not tested |
-| File to `LSOFF` / plain chats | Plain (`m` upload) | Not tested |
+| Video to `LSON` peer | E2EE (`emv` upload) | Verified |
+| Video to `LSOFF` / plain chats | Plain (`m` upload) | Verified |
+| File to `LSON` peer | E2EE (`emf` upload) | Verified |
+| File to `LSOFF` / plain chats | Plain (`m` upload) | Verified |
 | Audio send (any) | Not implemented | Known gap |
+
+### Media receive (incoming to Beeper)
+
+| Test case | Path | Status |
+| --- | --- | --- |
+| Incoming image from plain chat | Plain (`m` download) | Verified |
+| Incoming image from E2EE chat | E2EE (`emi` download) | Verified |
+| Incoming video from plain chat | Plain (`m` download) | Not tested |
+| Incoming video from E2EE chat | E2EE (`emv` download) | Not tested |
+| Incoming file from plain chat | Plain (`m` download) | Not tested |
+| Incoming file from E2EE chat | E2EE (`emf` download) | Not tested |
 
 ### Re-login and token refresh
 
