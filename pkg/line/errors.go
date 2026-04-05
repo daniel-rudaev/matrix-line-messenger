@@ -45,7 +45,9 @@ func IsNoUsableE2EEGroupKey(err error) bool {
 	// Code 5 "not found" = no group shared key; Code 98 = member has LS off;
 	// Code 1 "Authentication Failed" from getE2EEGroupSharedKey also indicates no key access.
 	if strings.Contains(msg, "\"code\":10051") && strings.Contains(msg, "talkexception") {
-		if strings.Contains(msg, "\"code\":5") || strings.Contains(msg, "\"code\":98") || strings.Contains(msg, "\"code\":1") {
+		if strings.Contains(msg, "\"code\":5,") || strings.Contains(msg, "\"code\":5}") ||
+			strings.Contains(msg, "\"code\":98,") || strings.Contains(msg, "\"code\":98}") ||
+			strings.Contains(msg, "\"code\":1,") || strings.Contains(msg, "\"code\":1}") {
 			return true
 		}
 	}
