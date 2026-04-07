@@ -44,6 +44,7 @@ Based on the [mautrix-twilio](https://github.com/mautrix/twilio) bridge
 - [x] Sticker retrieval support
 - [x] Link previews
 - [x] Message unsending/deletion
+- [x] Call notifications (voice and video, with duration)
 - [x] Leaving chats
 
 ## Setup
