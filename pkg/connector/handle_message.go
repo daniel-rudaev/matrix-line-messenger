@@ -156,6 +156,48 @@ func (lc *LineClient) queueIncomingMessage(msg *line.Message, opType int) {
 		ID:   networkid.MessageID(msg.ID),
 		ConvertMessageFunc: func(ctx context.Context, portal *bridgev2.Portal, intent bridgev2.MatrixAPI, data line.Message) (*bridgev2.ConvertedMessage, error) {
 			replyRelatesTo := lc.resolveReplyRelatesTo(ctx, &data)
+
+			// Handle call events (ORGCONTP == "CALL")
+			if data.ContentMetadata["ORGCONTP"] == "CALL" {
+				callType := "Voice"
+				if data.ContentMetadata["TYPE"] == "V" {
+					callType = "Video"
+				}
+
+				durationMs, _ := strconv.Atoi(data.ContentMetadata["DURATION"])
+				duration := durationMs / 1000
+				result := data.ContentMetadata["RESULT"]
+
+				var body string
+				switch {
+				case duration > 0:
+					mins := duration / 60
+					secs := duration % 60
+					if mins > 0 {
+						body = fmt.Sprintf("%s call (%dm%02ds)", callType, mins, secs)
+					} else {
+						body = fmt.Sprintf("%s call (%ds)", callType, secs)
+					}
+				case result == "CANCELED":
+					body = fmt.Sprintf("Missed %s call", strings.ToLower(callType))
+				default:
+					body = fmt.Sprintf("Missed %s call", strings.ToLower(callType))
+				}
+
+				return &bridgev2.ConvertedMessage{
+					Parts: []*bridgev2.ConvertedMessagePart{
+						{
+							Type: event.EventMessage,
+							Content: &event.MessageEventContent{
+								MsgType:   event.MsgNotice,
+								Body:      body,
+								RelatesTo: replyRelatesTo,
+							},
+						},
+					},
+				}, nil
+			}
+
 			// Handle Images
 			client := line.NewClient(lc.AccessToken)
 			if ContentType(data.ContentType) == ContentImage {
