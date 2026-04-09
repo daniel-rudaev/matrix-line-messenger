@@ -309,3 +309,8 @@ type PageInfoResult struct {
 type ObsInfo struct {
 	CDN string `json:"cdn"`
 }
+
+type MediaMessageFlowResponse struct {
+	FlowMap        map[string]int `json:"flowMap"`
+	CacheTTLMillis string         `json:"cacheTtlMillis"`
+}
