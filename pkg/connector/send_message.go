@@ -54,11 +54,26 @@ func (lc *LineClient) HandleMatrixMessage(ctx context.Context, msg *bridgev2.Mat
 		contentMetadata["e2eeVersion"] = "2"
 	}
 
+	// Detect media files sent as MsgFile and handle them with the correct LINE content type.
+	// Matrix clients often send media as MsgFile (e.g. drag-and-drop), which would otherwise
+	// be sent as ContentFile (14) instead of the appropriate media type on LINE.
+	effectiveMsgType := msg.Content.MsgType
+	if effectiveMsgType == event.MsgFile && msg.Content.Info != nil {
+		mime := msg.Content.Info.MimeType
+		if strings.HasPrefix(mime, "audio/") {
+			effectiveMsgType = event.MsgAudio
+		} else if strings.HasPrefix(mime, "video/") {
+			effectiveMsgType = event.MsgVideo
+		} else if strings.HasPrefix(mime, "image/") {
+			effectiveMsgType = event.MsgImage
+		}
+	}
+
 	// For non-text messages, check with the server whether to use E2EE or plain media upload.
 	// This must happen before media processing since it affects the upload path.
 	useE2EEMedia := !plainText
-	if useE2EEMedia && msg.Content.MsgType != event.MsgText {
-		mediaContentType := contentTypeForMsgType(msg.Content.MsgType)
+	if useE2EEMedia && effectiveMsgType != event.MsgText {
+		mediaContentType := contentTypeForMsgType(effectiveMsgType)
 		if !lc.shouldUseE2EEMediaFlow(portalMid, mediaContentType) {
 			lc.UserLogin.Bridge.Log.Info().
 				Str("portal", portalMid).
@@ -82,7 +97,7 @@ func (lc *LineClient) HandleMatrixMessage(ctx context.Context, msg *bridgev2.Mat
 	var originalMediaData []byte
 	var originalThumbData []byte
 
-	switch msg.Content.MsgType {
+	switch effectiveMsgType {
 	case event.MsgText:
 		contentType = int(ContentText)
 		if plainText {
@@ -457,7 +472,7 @@ func (lc *LineClient) HandleMatrixMessage(ctx context.Context, msg *bridgev2.Mat
 		}
 
 	default:
-		return nil, fmt.Errorf("message type %s not implemented", msg.Content.MsgType)
+		return nil, fmt.Errorf("message type %s not implemented", effectiveMsgType)
 	}
 
 	// Encryption phase — skip entirely for plain text
